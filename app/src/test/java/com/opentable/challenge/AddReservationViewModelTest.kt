@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package com.example.android.observability
+package com.opentable.challenge
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.example.android.observability.persistence.User
-import com.example.android.observability.persistence.UserDao
-import com.example.android.observability.ui.UserViewModel
+import com.opentable.challenge.data.local.ReservationDao
+import com.opentable.challenge.data.model.Reservation
+import com.opentable.challenge.presentation.viewmodel.AddReservationViewModel
 import io.reactivex.Completable
 import io.reactivex.Flowable
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -33,67 +34,49 @@ import org.mockito.MockitoAnnotations
 
 
 /**
- * Unit test for [UserViewModel]
+ * Unit test for [AddReservationViewModel]
  */
-class UserViewModelTest {
+class AddReservationViewModelTest {
 
     @get:Rule
     var instantTaskExecutorRule = InstantTaskExecutorRule()
 
     @Mock
-    private lateinit var dataSource: UserDao
+    private lateinit var dataSource: ReservationDao
 
     @Captor
-    private lateinit var userArgumentCaptor: ArgumentCaptor<User>
+    private lateinit var userArgumentCaptor: ArgumentCaptor<Reservation>
 
-    private lateinit var viewModel: UserViewModel
+    private lateinit var viewModel: AddReservationViewModel
 
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
 
-        viewModel = UserViewModel(dataSource)
+        val configuration = GlobalConfig(START_TIME, END_TIME, INTERVAL)
+
+        viewModel = AddReservationViewModel(dataSource, configuration)
     }
 
     @Test
-    fun getUserName_whenNoUserSaved() {
-        // Given that the UserDataSource returns an empty list of users
-        `when`(dataSource.getUserById(UserViewModel.USER_ID)).thenReturn(Flowable.empty<User>())
+    fun getCalculatedTimeSlots() {
+        val calculatedTimeSlots = viewModel.calculateTimeSlots()
 
-        //When getting the user name
-        viewModel.userName()
-                .test()
-                // The user name is empty
-                .assertNoValues()
+        Assert.assertTrue(calculatedTimeSlots.size == 28)
+        Assert.assertTrue(calculatedTimeSlots.get(0).id == "17.0")
+        Assert.assertTrue(calculatedTimeSlots.get(4).id == "18.0")
+        Assert.assertTrue(calculatedTimeSlots.get(8).id == "19.0")
+        Assert.assertTrue(calculatedTimeSlots.get(12).id == "20.0")
+        Assert.assertTrue(calculatedTimeSlots.get(16).id == "21.0")
+        Assert.assertTrue(calculatedTimeSlots.get(20).id == "22.0")
+        Assert.assertTrue(calculatedTimeSlots.get(24).id == "23.0")
     }
 
-    @Test
-    fun getUserName_whenUserSaved() {
-        // Given that the UserDataSource returns a user
-        val user = User(userName = "user name")
-        `when`(dataSource.getUserById(UserViewModel.USER_ID)).thenReturn(Flowable.just(user))
 
-        //When getting the user name
-        viewModel.userName()
-                .test()
-                // The correct user name is emitted
-                .assertValue("user name")
+    companion object {
+        private val RESERVATION = Reservation("15.45", "Irvin Gonzalez B.", "15:45")
+        const val START_TIME = 17
+        const val END_TIME = 23
+        const val INTERVAL = 4
     }
-
-    @Test
-    fun updateUserName_updatesNameInDataSource() {
-        // Given that a user is already inserted
-        dataSource.insertUser(User(UserViewModel.USER_ID, "name"))
-
-        // And a specific user is expected when inserting
-        val userName = "new user name"
-        val expectedUser = User(UserViewModel.USER_ID, userName)
-        `when`(dataSource.insertUser(expectedUser)).thenReturn(Completable.complete())
-
-        // When updating the user name
-        viewModel.updateUserName(userName)
-                .test()
-                .assertComplete()
-    }
-
 }

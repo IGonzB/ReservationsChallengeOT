@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package com.example.android.observability.persistence
+package com.opentable.challenge
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.opentable.challenge.data.local.ReservationsDatabase
+import com.opentable.challenge.data.model.Reservation
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -27,74 +29,83 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Test the implementation of [UserDao]
+ * Test the implementation of [ReservationsDao]
  */
 @RunWith(AndroidJUnit4::class)
-class UserDaoTest {
+class ReservationsDaoTest {
 
-    @get:Rule var instantTaskExecutorRule = InstantTaskExecutorRule()
+    @get:Rule
+    var instantTaskExecutorRule = InstantTaskExecutorRule()
 
-    private lateinit var database: UsersDatabase
+    private lateinit var database: ReservationsDatabase
 
-    @Before fun initDb() {
+    @Before
+    fun initDb() {
         // using an in-memory database because the information stored here disappears after test
-        database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(),
-                UsersDatabase::class.java)
-                // allowing main thread queries, just for testing
-                .allowMainThreadQueries()
-                .build()
+        database = Room.inMemoryDatabaseBuilder(
+            ApplicationProvider.getApplicationContext(),
+            ReservationsDatabase::class.java
+        )
+            // allowing main thread queries, just for testing
+            .allowMainThreadQueries()
+            .build()
     }
 
-    @After fun closeDb() {
+    @After
+    fun closeDb() {
         database.close()
     }
 
-    @Test fun getUsersWhenNoUserInserted() {
-        database.userDao().getUserById("123")
-                .test()
-                .assertNoValues()
+    @Test
+    fun getUsersWhenNoUserInserted() {
+        database.reservationDAO().getReservationById("15.45")
+            .test()
+            .assertNoValues()
     }
 
-    @Test fun insertAndGetUser() {
+    @Test
+    fun insertAndGetUser() {
         // When inserting a new user in the data source
-        database.userDao().insertUser(USER).blockingAwait()
+        database.reservationDAO().insertReservation(RESERVATION).blockingAwait()
 
         // When subscribing to the emissions of the user
-        database.userDao().getUserById(USER.id)
-                .test()
-                // assertValue asserts that there was only one emission of the user
-                .assertValue { it.id == USER.id && it.userName == USER.userName }
+        database.reservationDAO().getReservationById(RESERVATION.reservationId)
+            .test()
+            // assertValue asserts that there was only one emission of the user
+            .assertValue { it.reservationId == RESERVATION.reservationId && it.reservationName == RESERVATION.reservationName }
     }
 
-    @Test fun updateAndGetUser() {
+    @Test
+    fun updateAndGetUser() {
         // Given that we have a user in the data source
-        database.userDao().insertUser(USER).blockingAwait()
+        database.reservationDAO().insertReservation(RESERVATION).blockingAwait()
 
         // When we are updating the name of the user
-        val updatedUser = User(USER.id, "new username")
-        database.userDao().insertUser(updatedUser).blockingAwait()
+        val updatedUser = Reservation(RESERVATION.reservationId, "Irvin G New", RESERVATION.reservationTime)
+        database.reservationDAO().insertReservation(updatedUser).blockingAwait()
 
         // When subscribing to the emissions of the user
-        database.userDao().getUserById(USER.id)
-                .test()
-                // assertValue asserts that there was only one emission of the user
-                .assertValue { it.id == USER.id && it.userName == "new username" }
+        database.reservationDAO().getReservationById(RESERVATION.reservationId)
+            .test()
+            // assertValue asserts that there was only one emission of the user
+            .assertValue { it.reservationId == RESERVATION.reservationId && it.reservationName == "Irvin G New" }
     }
 
-    @Test fun deleteAndGetUser() {
+    @Test
+    fun deleteAndGetUser() {
         // Given that we have a user in the data source
-        database.userDao().insertUser(USER).blockingAwait()
+        database.reservationDAO().insertReservation(RESERVATION).blockingAwait()
 
         //When we are deleting all users
-        database.userDao().deleteAllUsers()
+        database.reservationDAO().deleteAllReservations()
         // When subscribing to the emissions of the user
-        database.userDao().getUserById(USER.id)
-                .test()
-                // check that there's no user emitted
-                .assertNoValues()
+        database.reservationDAO().getReservationById(RESERVATION.reservationId)
+            .test()
+            // check that there's no user emitted
+            .assertNoValues()
     }
 
     companion object {
-        private val USER = User("id", "username")
+        private val RESERVATION = Reservation("15.45", "Irvin Gonzalez B.", "15:45")
     }
 }
