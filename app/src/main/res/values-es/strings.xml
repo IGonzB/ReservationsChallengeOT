@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="add_reservation_title">Agregar Reservacion</string>
+    <string name="add_reservation_btn_save">Guardar</string>
+    <string name="add_reservation_name_hint">Que nombre para tu reservacion?</string>
+    <string name="reservations_title">Reservaciones</string>
+    <string name="action_switch_configuration">Configuracion</string>
+    <string name="action_switch_layout">Configuracion</string>
+    <string name="add_reservation_spinner_prompt">Selecciona la hora de la reservacion</string>
+    <string name="add_reservation_nothing_selected">No selecciono ningun horario</string>
+    <string name="add_reservation_name_error">Campo obligatorio para continuar</string>
+</resources>
